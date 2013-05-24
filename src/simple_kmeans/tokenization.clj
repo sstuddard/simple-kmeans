@@ -5,14 +5,14 @@
   (clojure.string/replace text #"[!@#$%^&*()_\+-=,.<>/?\\\[\]|\"]" " "))
 
 (defn stopword? [word]
-  (let [stopwords ["the" "he" "she" "it" "and" "or" "if" "but" "i" "is" "me" "can" "of" "as" "to"]]
+  (let [stopwords ["the" "he" "she" "it" "and" "or" "if" "but" "i" "is" "me" "can" "of" "as" "to" "a" "in"]]
     (some #(= word %) stopwords)))
 
 (defn tokenize 
   "Tokenizes a string, removing symbols, stopwords, and lowercasing."
   [text]
   (filter #(not (stopword? %)) 
-    (re-seq #"\w+" text)))
+    (re-seq #"\w+" (clojure.string/lower-case text))))
 
 (defn get-vocabulary 
   "Generates a set that is the vocabulary of the documents"

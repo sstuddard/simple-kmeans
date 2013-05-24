@@ -59,5 +59,8 @@
 (defn random-centroids
   "Returns k vectors from the supplied vectors"
   [k v]
-  (take k (repeat (nth v (rand-int (count v))))))
+  (letfn [(sample [f]
+            (let [shuffled (shuffle f)]
+              (cons (first shuffled) (lazy-seq (sample (rest shuffled))))))]
+    (take k (sample v))))
 
