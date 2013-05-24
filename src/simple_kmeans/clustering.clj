@@ -71,3 +71,12 @@
         k (map inc (range 1 max-k))]
     (map #(random-centroids % v) k)))
 
+(defn gen-centroids
+  "Builds a sequence of centroid sets"
+  [auto k v n]
+  (reduce concat 
+    (take n (repeat 
+      (if auto
+        (auto-centroids v)
+        (list (random-centroids k v)))))))
+

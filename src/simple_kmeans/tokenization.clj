@@ -1,18 +1,23 @@
 (ns simple-kmeans.tokenization
-  (:use [clojure.set]))
-
-(defn remove-symbols [text]
-  (clojure.string/replace text #"[!@#$%^&*()_\+-=,.<>/?\\\[\]|\"]" " "))
+  (:use [clojure.set]
+        [simple-kmeans.sparsevector]))
 
 (defn stopword? [word]
-  (let [stopwords ["the" "he" "she" "it" "and" "or" "if" "but" "i" "is" "me" "can" "of" "as" "to" "a" "in"]]
+  (let [stopwords ["the" "he" "she" "it" "and" "or" "if" "but" "i" "is" "me" "can" "of" "as" "to" "a" "in"
+                    "by" "are" "we" "was" "this" "for" "that" "these" "be" "than" "then" "from" "an" "his" "hers"
+                    "her" "with" "says" "they" "on" "got" "what" "do" "there" "so" "has" "you" "who" "have"]]
     (some #(= word %) stopwords)))
 
-(defn tokenize 
-  "Tokenizes a string, removing symbols, stopwords, and lowercasing."
+(defn tokenize
+  "Tokenizes a string into terms"
   [text]
+  (re-seq #"\w+" text))
+
+(defn termify
+  "Filters tokens, removing stopwords and lowercasing."
+  [tokens]
   (filter #(not (stopword? %)) 
-    (re-seq #"\w+" (clojure.string/lower-case text))))
+    (map clojure.string/lower-case tokens)))
 
 (defn get-vocabulary 
   "Generates a set that is the vocabulary of the documents"
@@ -33,5 +38,5 @@
   "Given a list of terms and a vocabulary term lookup, create a sparse term vector"
   [terms term-lookup]
   (let [freqs (frequencies terms)]
-    (reduce (fn [new-map [k v]] (assoc new-map (term-lookup k) v)) {} freqs)))
+    (normalize (reduce (fn [new-map [k v]] (assoc new-map (term-lookup k) v)) {} freqs))))
 
