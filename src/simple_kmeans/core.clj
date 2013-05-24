@@ -38,6 +38,7 @@
                ["-k" "--clusters" "Specify number of clusters" :parse-fn #(Integer. %)] 
                ["-f" "--file" "The hostname"]
                ["-d" "--documentkey" "The first token of a document is its key" :flag true]
+               ["-c" "--centroids" "Output centroids" :flag true]
                ["-n" "--randomruns" "Do runs n times" :parse-fn #(Integer. %) :default 1]
                ["-m" "--iterations" "The max iterations for convergence" :parse-fn #(Integer. %) :default 10])]
 
@@ -50,18 +51,18 @@
           runs ((first opts) :randomruns)
           k ((first opts) :clusters)
           convergence-iterations ((first opts) :iterations)
-          distance-function euclidean-distance
           centroids (take runs (repeat (random-centroids k vectors)))
           document-key-included ((first opts) :documentkey)
+          output-centroids ((first opts) :centroids)
           doc-lookup (document-lookup vectors (if document-key-included (map first documents) (range)))
-          result (optimize-cluster centroids vectors distance-function convergence-iterations)]
+          result (optimize-cluster centroids vectors euclidean-distance convergence-iterations)]
       (println "Found" (count data) "documents.")
       (println "Document key in documents: " document-key-included)
       (println "Testing" runs "times")
       (println "Found" (count (keys result)) "clusters")
-      (println (format "Results (error: %.3f)" (double (cluster-error result distance-function))))
+      (println (format "Results (error: %.3f)" (double (cluster-error result euclidean-distance))))
       (doseq [[k v] result]
-        (println "Centroid:" (format-doc-vector k term-lookup))
+        (if output-centroids (println "Centroid:" (format-doc-vector k term-lookup)))
         (println "Documents:" (map doc-lookup v))
         (println "")))))
 
