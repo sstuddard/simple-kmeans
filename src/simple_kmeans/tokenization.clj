@@ -12,9 +12,7 @@
   "Tokenizes a string, removing symbols, stopwords, and lowercasing."
   [text]
   (filter #(not (stopword? %)) 
-    (filter #(not (.isEmpty %)) 
-      (clojure.string/split 
-        (remove-symbols (clojure.string/lower-case text)) #"\s"))))
+    (re-seq #"\w+" text)))
 
 (defn get-vocabulary 
   "Generates a set that is the vocabulary of the documents"
@@ -32,8 +30,8 @@
   (zipmap (range) vocabulary))
 
 (defn get-term-vector
-  "Given a list of terms and a vocabulary term lookup, create a term vector"
+  "Given a list of terms and a vocabulary term lookup, create a sparse term vector"
   [terms term-lookup]
   (let [freqs (frequencies terms)]
-    
+    (reduce (fn [new-map [k v]] (assoc new-map (term-lookup k) v)) {} freqs)))
 
