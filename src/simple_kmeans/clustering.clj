@@ -64,3 +64,10 @@
               (cons (first shuffled) (lazy-seq (sample (rest shuffled))))))]
     (take k (sample v))))
 
+(defn auto-centroids
+  "Generates automatic centroids with k in (2..n/2)"
+  [v]
+  (let [max-k (int (/ (count v) 2))
+        k (map inc (range 1 max-k))]
+    (map #(random-centroids % v) k)))
+

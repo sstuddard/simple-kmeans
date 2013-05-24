@@ -30,16 +30,26 @@
                                   [(get d key1) key1]))) d)]
     (map #(format-term (first %1) (second %1) l) sorted)))
 
+(defn gen-centroids
+  "Builds a sequence of centroid sets"
+  [auto k v n]
+  (reduce concat 
+    (take n (repeat 
+      (if auto
+        (auto-centroids v)
+        (list (random-centroids k v)))))))
+
 (defn -main
   "Run k-means clustering on documents from a line-delimited file. The first token of a line 
     is the identifier for the document."
   [& args]
   (let [opts (cli args
-               ["-k" "--clusters" "Specify number of clusters" :parse-fn #(Integer. %)] 
+               ["-k" "--clusters" "Specify number of clusters" :parse-fn #(Integer. %) :default 2] 
                ["-f" "--file" "The hostname"]
                ["-d" "--documentkey" "The first token of a document is its key" :flag true]
                ["-c" "--centroids" "Output centroids" :flag true]
-               ["-n" "--randomruns" "Do runs n times" :parse-fn #(Integer. %) :default 1]
+               ["-a" "--autok" "Automatically optimize k" :flag true]
+               ["-n" "--randomruns" "Run n times per centroids selection" :parse-fn #(Integer. %) :default 1]
                ["-m" "--iterations" "The max iterations for convergence" :parse-fn #(Integer. %) :default 10])]
 
     (let [filepath ((first opts) :file)
@@ -50,8 +60,9 @@
           term-lookup (vocab-index-lookup vocabulary)
           runs ((first opts) :randomruns)
           k ((first opts) :clusters)
+          autok ((first opts) :autok)
           convergence-iterations ((first opts) :iterations)
-          centroids (take runs (repeat (random-centroids k vectors)))
+          centroids (gen-centroids autok k vectors runs)
           document-key-included ((first opts) :documentkey)
           output-centroids ((first opts) :centroids)
           doc-lookup (document-lookup vectors (if document-key-included (map first documents) (range)))
