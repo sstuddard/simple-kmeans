@@ -22,6 +22,7 @@
                ["-f" "--file" "The hostname"]
                ["-d" "--documentkey" "The first token of a document is its key" :flag true]
                ["-c" "--centroids" "Output centroids" :flag true]
+               ["-j" "--jaccard" "Use Jaccard distance" :flag true]
                ["-v" "--verbose" "Verbose output" :flag true]
                ["-a" "--autok" "Automatically optimize k" :flag true]
                ["-n" "--randomruns" "Run n times per centroids selection" :parse-fn #(Integer. %) :default 1]
@@ -32,18 +33,20 @@
           k ((first opts) :clusters)
           autok ((first opts) :autok)
           verbose ((first opts) :verbose)
+          jaccard ((first opts) :jaccard)
           document-key-included ((first opts) :documentkey)
           output-centroids ((first opts) :centroids)
           convergence-iterations ((first opts) :iterations)
           data (get-lines filepath)
           tokenized (map tokenize data)
+          distance-function (if jaccard jaccard-distance euclidean-distance)
           documents (map termify (if document-key-included (map rest tokenized) tokenized))
           vocabulary (get-vocabulary documents)
           vectors (map #(get-term-vector % (vocab-term-lookup vocabulary)) documents)
           term-lookup (vocab-index-lookup vocabulary)
           doc-lookup (document-lookup vectors (if document-key-included (map first tokenized) (range)))
           centroids (gen-centroids autok k vectors runs)
-          result (optimize-cluster centroids vectors euclidean-distance convergence-iterations)]
+          result (optimize-cluster centroids vectors distance-function convergence-iterations)]
       (if verbose
         (do
           (println "Found" (count data) "documents.")
@@ -53,7 +56,7 @@
           (doseq [c centroids]
             (println (map doc-lookup c)))
           (println "Found" (count (keys result)) "clusters")
-          (println (format "Results (error: %.3f)" (double (cluster-error result euclidean-distance))))
+          (println (format "Results (error: %.3f)" (double (cluster-error result distance-function))))
           (doseq [[k v] result]
             (if output-centroids (println "Centroid:" (format-doc-vector k term-lookup)))
             (println "Documents:" (map doc-lookup v))
