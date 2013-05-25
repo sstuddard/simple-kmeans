@@ -49,6 +49,9 @@
           (println "Found" (count data) "documents.")
           (println "Document key in documents: " document-key-included)
           (println "Testing" runs "times")
+          (println "Initial centroids per run:")
+          (doseq [c centroids]
+            (println (map doc-lookup c)))
           (println "Found" (count (keys result)) "clusters")
           (println (format "Results (error: %.3f)" (double (cluster-error result euclidean-distance))))
           (doseq [[k v] result]

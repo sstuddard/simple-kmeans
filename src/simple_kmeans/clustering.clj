@@ -1,6 +1,7 @@
 (ns simple-kmeans.clustering
   (:use [clojure.set]
-        [simple-kmeans.sparsevector]))
+        [simple-kmeans.sparsevector])
+  (:require [clojure.math.numeric-tower :as math]))
 
 (defn calculate-centroid
   "Calculate new centroid based on a list of vectors"
@@ -41,14 +42,16 @@
     d is distance function, max m iterations to converge"
   [c v d m]
   (let [initial (construct-cluster c v d)]
+    (println "Clustering with" (count c) "centroids...")
     (loop [cluster initial
            countdown m
-           error 0]
+           error (cluster-error initial d)]
+      (println "\tCluster error" error)
       (let [new-cluster (update-cluster cluster d)
             new-error (cluster-error new-cluster d)]
-        (if (or (= 0 countdown) (= error new-error))
+        (if (or (= 0 countdown) (< (math/abs (- error new-error)) 0.0001))
           new-cluster
-          (recur new-cluster (dec m) new-error))))))
+          (recur new-cluster (dec countdown) new-error))))))
         
 (defn optimize-cluster
   "Runs through a list of centroid choices, returning the argmin cluster error"
@@ -62,6 +65,7 @@
   (letfn [(sample [f]
             (let [shuffled (shuffle f)]
               (cons (first shuffled) (lazy-seq (sample (rest shuffled))))))]
+    (println "Generating random")
     (take k (sample v))))
 
 (defn auto-centroids
