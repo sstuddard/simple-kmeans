@@ -59,28 +59,24 @@
   (let [clusters (map #(cluster % v d m) c)]
     (apply min-key #(cluster-error % d) clusters)))
 
-(defn random-centroids
+(defn random-vectors
   "Returns k vectors from the supplied vectors"
   [k v]
-  (letfn [(sample [f]
-            (let [shuffled (shuffle f)]
-              (cons (first shuffled) (lazy-seq (sample (rest shuffled))))))]
-    (println "Generating random")
-    (take k (sample v))))
-
+  (if (= k 0)
+    []
+    (let [shuffled (shuffle v)]
+      (conj (random-vectors (dec k) (pop shuffled)) (peek shuffled)))))
+  
 (defn auto-centroids
   "Generates automatic centroids with k in (2..n/2)"
   [v]
   (let [max-k (int (/ (count v) 2))
         k (map inc (range 1 max-k))]
-    (map #(random-centroids % v) k)))
+    (map #(random-vectors % v) k)))
 
 (defn gen-centroids
   "Builds a sequence of centroid sets"
   [auto k v n]
-  (reduce concat 
-    (take n (repeat 
-      (if auto
-        (auto-centroids v)
-        (list (random-centroids k v)))))))
-
+  (if (= n 0)
+    []
+    (conj (gen-centroids auto k v (dec n)) (if auto (auto-centroids v) (vec (random-vectors k v))))))
