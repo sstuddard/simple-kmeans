@@ -1,5 +1,6 @@
 (ns simple-kmeans.sparsevector
-  (:use [clojure.set])
+  (:use [clojure.set]
+        [simple-kmeans.util])
   (:require [clojure.math.numeric-tower :as math]))
 
 (defn union-sparse-index
@@ -26,4 +27,4 @@
   "Normalizes a sparse vector to unit length"
   [v]
   (let [length (vector-length v)]
-    (reduce (fn [new-map [t value]] (assoc new-map t (/ value length))) {} v)))
+    (remap v #(/ % length))))

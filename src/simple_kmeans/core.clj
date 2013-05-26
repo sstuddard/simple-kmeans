@@ -9,6 +9,33 @@
         [clojure.tools.cli :only [cli]]
         [clojure.set]))
 
+(defn build-data
+  "Given a file, prepares all the data necessary for clustering."
+  [filepath document-key-included]
+  (let [data (get-lines filepath)
+        tokenized (map tokenize data)
+        documents (map termify (if document-key-included (map rest tokenized) tokenized))
+        vocabulary (get-vocabulary documents)
+        gidf (idf documents)
+        index-lookup (vocab-term-lookup vocabulary)
+        term-lookup (vocab-index-lookup vocabulary)
+        raw-vectors (map #(get-term-frequency-vector % index-lookup) documents)
+        vectors (map #(normalize (get-tfidf-vector % gidf term-lookup)) raw-vectors)
+        doc-lookup (document-lookup vectors (if document-key-included (map first tokenized) (range)))
+        ]
+  {
+    :data data
+    :tokenized tokenized
+    :documents documents
+    :vocabulary vocabulary
+    :gidf gidf
+    :term-to-index index-lookup
+    :raw-vectors raw-vectors
+    :vectors vectors
+    :index-to-term term-lookup
+    :doc-lookup doc-lookup
+  }))
+
 (defn -main
   "Run k-means clustering on documents from a line-delimited file. The first token of a line 
     is the identifier for the document."
@@ -31,19 +58,16 @@
           document-key-included ((first opts) :documentkey)
           output-centroids ((first opts) :centroids)
           convergence-iterations ((first opts) :iterations)
-          data (get-lines filepath)
-          tokenized (map tokenize data)
+          build (build-data filepath document-key-included) 
           distance-function (if jaccard jaccard-distance euclidean-distance)
-          documents (map termify (if document-key-included (map rest tokenized) tokenized))
-          vocabulary (get-vocabulary documents)
-          vectors (map #(get-term-vector % (vocab-term-lookup vocabulary)) documents)
-          term-lookup (vocab-index-lookup vocabulary)
-          doc-lookup (document-lookup vectors (if document-key-included (map first tokenized) (range)))
+          vectors (:vectors build)
+          doc-lookup (:doc-lookup build)
+          index-to-term (:index-to-term build)
           centroids (gen-centroids k k vectors runs distance-function)
           result (optimize-cluster centroids vectors distance-function convergence-iterations)]
       (if verbose
         (do
-          (println "Found" (count data) "documents.")
+          (println "Found" (count (:data build)) "documents.")
           (println "Document key in documents: " document-key-included)
           (println "Testing" runs "times")
           (println "Initial centroids per run:")
@@ -52,7 +76,7 @@
           (println "Found" (count (keys result)) "clusters")
           (println (format "Results (error: %.3f)" (double (cluster-error result distance-function))))
           (doseq [[k v] result]
-            (if output-centroids (println "Centroid:" (format-doc-vector k term-lookup)))
+            (if output-centroids (println "Centroid:" (format-doc-vector k index-to-term)))
             (println "Documents:" (map doc-lookup v))
             (println "")))
         (do

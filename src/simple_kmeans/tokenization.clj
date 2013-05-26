@@ -34,9 +34,26 @@
   [vocabulary]
   (zipmap (range) vocabulary))
 
-(defn get-term-vector
+(defn get-term-frequency-vector
   "Given a list of terms and a vocabulary term lookup, create a sparse term vector"
   [terms term-lookup]
   (let [freqs (frequencies terms)]
-    (normalize (reduce (fn [new-map [k v]] (assoc new-map (term-lookup k) v)) {} freqs))))
+    (reduce (fn [new-map [k v]] (assoc new-map (term-lookup k) v)) {} freqs)))
 
+(defn get-tfidf-vector
+  "Given a tf vector, apply idf weighting and normalization"
+  [v gidf term-lookup]
+  (apply merge
+    (map (fn [[k v]] 
+            {k (* v (gidf (term-lookup k)))})
+      v)))
+
+(defn idf
+  "Generate idf lookup from a set of documents"
+  [documents]
+  (let [vocabulary (get-vocabulary documents)]
+    (zipmap vocabulary
+      (for [term vocabulary] 
+        (java.lang.Math/log (/ (count documents) 
+          (reduce + 
+            (for [doc documents] (if (some #{term} doc) 1 0)))))))))

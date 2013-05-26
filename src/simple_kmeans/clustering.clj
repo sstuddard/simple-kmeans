@@ -48,11 +48,9 @@
     d is distance function, max m iterations to converge"
   [c v d m]
   (let [initial (construct-cluster c v d)]
-    (println "Clustering with" (count c) "centroids...")
     (loop [cluster initial
            countdown m
            error (cluster-error initial d)]
-      (println "\tCluster error" error)
       (let [new-cluster (update-cluster cluster d)
             new-error (cluster-error new-cluster d)]
         (if (or (= 0 countdown) (< (math/abs (- error new-error)) 0.0001))
