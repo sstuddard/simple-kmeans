@@ -20,14 +20,12 @@
                ["-c" "--centroids" "Output centroids" :flag true]
                ["-j" "--jaccard" "Use Jaccard distance" :flag true]
                ["-v" "--verbose" "Verbose output" :flag true]
-               ["-a" "--autok" "Automatically optimize k" :flag true]
                ["-n" "--randomruns" "Run n times per centroids selection" :parse-fn #(Integer. %) :default 1]
                ["-m" "--iterations" "The max iterations for convergence" :parse-fn #(Integer. %) :default 10])]
 
     (let [filepath ((first opts) :file)
           runs ((first opts) :randomruns)
           k ((first opts) :clusters)
-          autok ((first opts) :autok)
           verbose ((first opts) :verbose)
           jaccard ((first opts) :jaccard)
           document-key-included ((first opts) :documentkey)
