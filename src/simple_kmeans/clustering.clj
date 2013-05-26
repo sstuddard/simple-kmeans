@@ -1,6 +1,7 @@
 (ns simple-kmeans.clustering
   (:use [clojure.set]
-        [simple-kmeans.sparsevector])
+        [simple-kmeans.sparsevector]
+        [simple-kmeans.util])
   (:require [clojure.math.numeric-tower :as math]))
 
 (defn calculate-centroid
@@ -32,10 +33,15 @@
         c (map calculate-centroid x)]
     (construct-cluster c v d)))
 
+(defn cluster-vector-errors
+  "Returns a map of errors per vector for the given cluster"
+  [c d]
+  (apply merge (map (fn [[x v]] (reduce #(assoc %1 %2 (d x %2)) {} v)) c)))
+
 (defn cluster-error
   "Returns the error for a given cluster and distance function"
   [c d]
-  (reduce + (flatten (map (fn [x] (map #(d x %) (c x))) (keys c)))))
+  (reduce + (vals (cluster-vector-errors c d))))
 
 (defn cluster
   "Return result of kmeans clustering, centroids c is k dimensions, 
@@ -59,24 +65,23 @@
   (let [clusters (map #(cluster % v d m) c)]
     (apply min-key #(cluster-error % d) clusters)))
 
-(defn random-vectors
-  "Returns k vectors from the supplied vectors"
-  [k v]
-  (if (= k 0)
-    []
-    (let [shuffled (shuffle v)]
-      (conj (random-vectors (dec k) (pop shuffled)) (peek shuffled)))))
-  
-(defn auto-centroids
-  "Generates automatic centroids with k in (2..n/2)"
-  [v]
-  (let [max-k (int (/ (count v) 2))
-        k (map inc (range 1 max-k))]
-    (map #(random-vectors % v) k)))
+(defn kmeans-plusplus
+  "Given k, distance fn, and vectors, generate centroids via k-means++ algorithm"
+  [k v d]
+  (let [initial-centroids (conj [] (first (shuffle v)))]
+    (loop [centroids initial-centroids
+           more-k (dec k)]
+      (if (= more-k 0)
+        centroids
+        (let [cluster (construct-cluster centroids v d)
+              sq-errors (remap (cluster-vector-errors cluster d) #(* % %))
+              new-centroid (sample sq-errors)]
+          (recur (conj centroids new-centroid) (dec more-k)))))))
 
 (defn gen-centroids
   "Builds a sequence of centroid sets"
-  [auto k v n]
-  (if (= n 0)
-    []
-    (conj (gen-centroids auto k v (dec n)) (if auto (auto-centroids v) (vec (random-vectors k v))))))
+  [mink maxk v n d]
+  (for [k (range mink (inc maxk))
+        i (range n)]
+    (kmeans-plusplus k v d)))
+

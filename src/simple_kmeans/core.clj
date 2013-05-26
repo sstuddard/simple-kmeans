@@ -5,13 +5,9 @@
         [simple-kmeans.clustering]
         [simple-kmeans.geometry]
         [simple-kmeans.document]
+        [simple-kmeans.util]
         [clojure.tools.cli :only [cli]]
-        [clojure.set])
-  (:require clojure.java.io))
-
-(defn get-lines [fname]
-  (with-open [r (clojure.java.io/reader fname)]
-    (doall (line-seq r))))
+        [clojure.set]))
 
 (defn -main
   "Run k-means clustering on documents from a line-delimited file. The first token of a line 
@@ -45,7 +41,7 @@
           vectors (map #(get-term-vector % (vocab-term-lookup vocabulary)) documents)
           term-lookup (vocab-index-lookup vocabulary)
           doc-lookup (document-lookup vectors (if document-key-included (map first tokenized) (range)))
-          centroids (gen-centroids autok k vectors runs)
+          centroids (gen-centroids k k vectors runs distance-function)
           result (optimize-cluster centroids vectors distance-function convergence-iterations)]
       (if verbose
         (do
