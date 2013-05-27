@@ -1,4 +1,4 @@
-(defproject simple-kmeans "0.1.0-SNAPSHOT"
+(defproject simple-kmeans "0.1.0"
   :description "Simple k-means implementation to cluster documents."
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
