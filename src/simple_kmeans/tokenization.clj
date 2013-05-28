@@ -5,7 +5,8 @@
 (defn stopword? [word]
   (let [stopwords ["the" "he" "she" "it" "and" "or" "if" "but" "i" "is" "me" "can" "of" "as" "to" "a" "in"
                     "by" "are" "we" "was" "this" "for" "that" "these" "be" "than" "then" "from" "an" "his" "hers"
-                    "her" "with" "says" "they" "on" "got" "what" "do" "there" "so" "has" "you" "who" "have"]]
+                    "her" "with" "says" "they" "on" "got" "what" "do" "there" "so" "has" "you" "who" "have"
+                    "had" "how" "our" "were" "my"]]
     (some #(= word %) stopwords)))
 
 (defn tokenize
@@ -34,11 +35,15 @@
   [vocabulary]
   (zipmap (range) vocabulary))
 
+(defn get-term-vector
+  "Given a list of terms, weights, and a vocabulary term lookup, create a sparse vector"
+  [term-weights term-lookup]
+    (reduce (fn [new-map [k v]] (assoc new-map (term-lookup k) v)) {} term-weights))
+
 (defn get-term-frequency-vector
   "Given a list of terms and a vocabulary term lookup, create a sparse term vector"
   [terms term-lookup]
-  (let [freqs (frequencies terms)]
-    (reduce (fn [new-map [k v]] (assoc new-map (term-lookup k) v)) {} freqs)))
+  (get-term-vector (frequencies terms) term-lookup))
 
 (defn get-tfidf-vector
   "Given a tf vector, apply idf weighting and normalization"
