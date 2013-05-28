@@ -23,6 +23,12 @@
   [v]
   (math/sqrt (reduce + (map #(* %1 %1) (vals v)))))
 
+(defn add-vectors
+  "Adds to sparse vectors"
+  [v1 v2]
+  (let [indices (union-sparse-index v1 v2)]
+    (zipmap indices (map #(reduce + (sparse-array-values brain-vectors %)) indices))))
+
 (defn normalize
   "Normalizes a sparse vector to unit length"
   [v]
