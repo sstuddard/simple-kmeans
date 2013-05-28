@@ -27,7 +27,7 @@
   "Adds to sparse vectors"
   [& v]
   (let [indices (apply union-sparse-index v)]
-    (zipmap indices (map #(reduce + (sparse-array-values brain-vectors %)) indices))))
+    (zipmap indices (map #(reduce + (sparse-array-values v %)) indices))))
 
 (defn normalize
   "Normalizes a sparse vector to unit length"

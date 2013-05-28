@@ -3,7 +3,7 @@
         [simple-kmeans.sparsevector]))
 
 (defn stopword? [word]
-  (let [stopwords ["the" "he" "she" "it" "and" "or" "if" "but" "i" "is" "me" "can" "of" "as" "to" "a" "in"
+  (let [stopwords [ "the" "he" "she" "it" "and" "or" "if" "but" "i" "is" "me" "can" "of" "as" "to" "a" "in"
                     "by" "are" "we" "was" "this" "for" "that" "these" "be" "than" "then" "from" "an" "his" "hers"
                     "her" "with" "says" "they" "on" "got" "what" "do" "there" "so" "has" "you" "who" "have"
                     "had" "how" "our" "were" "my"]]
@@ -12,7 +12,8 @@
 (defn tokenize
   "Tokenizes a string into terms"
   [text]
-  (re-seq #"\w+" text))
+  (let [filtered (clojure.string/replace text "\\n" " ")]
+    (re-seq #"\w+" filtered)))
 
 (defn termify
   "Filters tokens, removing stopwords and lowercasing."
