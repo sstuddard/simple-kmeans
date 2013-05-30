@@ -47,12 +47,14 @@
   (get-term-vector (frequencies terms) term-lookup))
 
 (defn get-tfidf-vector
-  "Given a tf vector, apply idf weighting and normalization"
-  [v gidf term-lookup]
-  (apply merge
+  "Given a tf vector and idf function, apply idf weighting"
+  [v gidf-fn]
+  (normalize (apply merge
     (map (fn [[k v]] 
-            {k (* v (gidf (term-lookup k)))})
-      v)))
+            (if (gidf-fn k)
+              {k (* v (gidf-fn k))}
+              {}))
+      v))))
 
 (defn idf
   "Generate idf lookup from a set of documents"
@@ -63,3 +65,12 @@
         (java.lang.Math/log (/ (count documents) 
           (reduce + 
             (for [doc documents] (if (some #{term} doc) 1 0)))))))))
+
+(defn idf-fn 
+  "Generates an idf lookup fn"
+  [documents]
+  (let [vocabulary (get-vocabulary documents)
+        term-lookup (vocab-index-lookup vocabulary)
+        idf-table (idf documents)]
+    (fn [term]
+      (idf-table (term-lookup term)))))

@@ -16,11 +16,11 @@
         tokenized (map tokenize data)
         documents (map termify (if document-key-included (map rest tokenized) tokenized))
         vocabulary (get-vocabulary documents)
-        gidf (idf documents)
+        gidf (idf-fn documents)
         index-lookup (vocab-term-lookup vocabulary)
         term-lookup (vocab-index-lookup vocabulary)
         raw-vectors (map #(get-term-frequency-vector % index-lookup) documents)
-        vectors (map #(normalize (get-tfidf-vector % gidf term-lookup)) raw-vectors)
+        vectors (map #(normalize (get-tfidf-vector % gidf)) raw-vectors)
         doc-lookup (document-lookup vectors (if document-key-included (map first tokenized) (range)))
         ]
   {
